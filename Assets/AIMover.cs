@@ -2,19 +2,45 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
 
 public class AIMover : MonoBehaviour
 {
-	[SerializeField]
-	private Transform[] waypoints;
+	public Transform SeeParent => seeParent;
+	public int TeamID => currentTeamID;
+
+	public UnityEvent OnTeamChanged = new(); 
+
 	[SerializeField]
 	private Transform destination;
 	[SerializeField]
 	private float stoppingDistance = 0.5f;
+
+	[Header( "Patrol" )]
+	[SerializeField]
+	private Transform[] waypoints;
 	[SerializeField]
 	private float patrolWaitTime = 1.0f;
 
-	private NavMeshPathStatus lastStatus;
+	[Header( "Detection" )]
+	[SerializeField]
+	private Transform seeParent;
+	[SerializeField]
+	private LayerMask seeLayerMask;
+    [SerializeField]
+	private float seeFOV = 90.0f;
+	[SerializeField]
+	private float seeRange = 5.0f;
+	[SerializeField]
+	private new SphereCollider collider;
+
+	[SerializeField]
+	private Material[] teamMaterials;
+	[SerializeField]
+	private int currentTeamID = 0;
+	[SerializeField]
+	private new SkinnedMeshRenderer renderer;
+
 	private int currentWaypointID = 0;
 	private float currentWaitTime = 0.0f; 
 
@@ -24,7 +50,20 @@ public class AIMover : MonoBehaviour
 	{
 		agent = GetComponent<NavMeshAgent>();
 		agent.stoppingDistance = stoppingDistance;
+
+		collider.radius = seeRange;
+    }
+
+	void Start()
+	{
+		SetTeam( currentTeamID );
+		waypoints = WaypointManager.Instance.GetRandomWaypoints( 4 );
 	}
+
+	void OnValidate()
+	{
+		SetTeam( currentTeamID );
+    }
 
 	void Update()
 	{
@@ -42,11 +81,18 @@ public class AIMover : MonoBehaviour
 			currentWaypointID = ( currentWaypointID + 1 ) % waypoints.Length;
 
 			currentWaitTime = patrolWaitTime;
-			print( "next waypoint " + currentWaypointID );
 		}
 
 		UpdateDestination();
 	}
+
+	public void SetTeam( int team_id )
+	{
+		currentTeamID = team_id;
+		renderer.material = teamMaterials[team_id];
+
+		OnTeamChanged.Invoke();
+    }
 
 	void UpdateDestination()
 	{
@@ -56,11 +102,41 @@ public class AIMover : MonoBehaviour
 		agent.SetDestination( destination.position );
 	}
 
+	bool CanDetect( Transform target )
+	{
+		Vector3 dir = ( target.position - seeParent.position ).normalized;
+		//print(Vector3.Dot(seeParent.forward, dir) + " >= " +  Mathf.Cos(seeFOV / 2.0f));
+		if ( Vector3.Dot( seeParent.forward, dir ) < Mathf.Cos( seeFOV / 2.0f ) ) return false;
+
+		//  check for obstacles
+		if ( Physics.Raycast( seeParent.position, seeParent.forward, out RaycastHit hit, seeRange, seeLayerMask, QueryTriggerInteraction.Ignore ) )
+		{
+			if ( hit.collider.transform != target ) 
+				return false;
+		}
+
+		return true;
+	}
+
+	void OnTriggerStay( Collider other )
+	{
+		if ( !other.TryGetComponent( out AIMover mover ) ) return;
+		if ( mover.TeamID == currentTeamID ) return;
+
+		if ( !CanDetect( mover.SeeParent ) ) return;
+
+		mover.SetTeam( currentTeamID );
+    }
+
 	void OnDrawGizmos()
 	{
 		Gizmos.color = Color.red;
 		Gizmos.DrawWireSphere( destination.position, stoppingDistance);
 		Gizmos.DrawLine( transform.position, destination.position );
+
+		Gizmos.color = Color.magenta;
+		Gizmos.matrix = ( seeParent == null ? transform : seeParent ).localToWorldMatrix;
+		Gizmos.DrawFrustum( Vector3.zero, seeFOV, seeRange, 0.0f, 1.0f );
 
 		//  draw path
 		if ( agent != null && agent.hasPath && agent.path.corners.Length > 0 )
