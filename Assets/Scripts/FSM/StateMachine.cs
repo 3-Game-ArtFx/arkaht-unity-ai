@@ -6,7 +6,7 @@ namespace FSM
 {
 	public class StateMachine : MonoBehaviour
 	{
-		public StateStatus Status { get; private set; } = StateStatus.Finished;
+		public Status Status { get; private set; } = Status.Finished;
 		public State State { get; private set; } = null;
 
 		public State StartState = null;
@@ -23,15 +23,15 @@ namespace FSM
 			if ( state == null ) return;
 
 			//  ensure previous state is ended
-			if ( State != null && State.Status == StateStatus.Running )
+			if ( State != null && State.Status == Status.Running )
 			{
-				State.End( StateStatus.Stopped );
+				State.End( Status.Stopped );
 			}
 
 			//  start next state
 			State = state;
 			State.StateMachine = this;
-			Status = StateStatus.Running;
+			Status = Status.Running;
 			State.Begin();
 
 			print("starting " + state);

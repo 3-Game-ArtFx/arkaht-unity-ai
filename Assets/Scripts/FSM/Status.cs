@@ -1,6 +1,6 @@
 ﻿namespace FSM
 {
-	public enum StateStatus
+	public enum Status
 	{
 		Running,
 		//Paused,

@@ -11,20 +11,24 @@ namespace FSM
 		public bool IsRunning => StateMachine != null && StateMachine.State == this;
 
 		public StateMachine StateMachine { get; set; }
-		public StateStatus Status { get; private set; } = StateStatus.Finished;
+		public Status Status { get; private set; } = Status.Finished;
 
 		[Header( "State" )]
 		public string Name = "State";
 
-		public StateTransition[] Transitions;
+		public Transition[] Transitions;
 
 		public State GetNextState()
 		{
-			foreach ( StateTransition transition in Transitions )
+			foreach ( Transition transition in Transitions )
 			{
-				if ( Status == StateStatus.Running && transition.OnlyEnded ) continue;
-				//if ( transition.Condition( StateMachine ) )
-				return transition.State;
+				if ( Status == Status.Running && transition.OnlyEnded ) continue;
+
+				//  evaluate transition
+				State next_state = transition.GetNextState( StateMachine );
+				if ( next_state == null ) continue;
+
+				return next_state;
 			}
 
 			return null;
@@ -32,10 +36,10 @@ namespace FSM
 
 		public void Begin()
 		{
-			Status = StateStatus.Running;
+			Status = Status.Running;
 			OnBegin();
 		}
-		public void End(StateStatus status = StateStatus.Finished)
+		public void End(Status status = Status.Finished)
 		{
 			Status = status;
 			OnEnd();
