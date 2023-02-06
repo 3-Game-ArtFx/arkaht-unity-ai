@@ -2,7 +2,7 @@
 
 namespace FSM.States
 {
-    public class WaitState : State
+    /*public class WaitState : State
     {
         [SerializeField]
         private float waitingTime = 1.0f;
@@ -23,5 +23,5 @@ namespace FSM.States
 
             print("waiting for " + currentWaitTime );
         }
-    }
+    }*/
 }

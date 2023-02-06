@@ -6,12 +6,13 @@ using UnityEngine;
 
 namespace FSM
 {
-	public abstract class State : MonoBehaviour
+	public sealed class State : MonoBehaviour
 	{
 		public bool IsRunning => StateMachine != null && StateMachine.State == this;
 
 		public StateMachine StateMachine { get; set; }
 		public Status Status { get; private set; } = Status.Finished;
+		public Task Task { get; private set; }
 
 		[Header( "State" )]
 		public string Name = "State";
@@ -22,11 +23,13 @@ namespace FSM
 		{
 			foreach ( Transition transition in Transitions )
 			{
-				if ( Status == Status.Running && transition.OnlyEnded ) continue;
+				if ( Status == Status.Running && transition.OnlyEnded )
+					continue;
 
 				//  evaluate transition
 				State next_state = transition.GetNextState( StateMachine );
-				if ( next_state == null ) continue;
+				if ( next_state == null )
+					continue;
 
 				return next_state;
 			}
@@ -34,20 +37,37 @@ namespace FSM
 			return null;
 		}
 
+		public void SetTask( Task task )
+		{
+			if ( Task != null && Task.Status == Status.Running )
+			{
+				Task.End( Status.Stopped );
+			}
+
+			task.StateMachine = StateMachine;
+			Task = task;
+		}
+
 		public void Begin()
 		{
 			Status = Status.Running;
-			OnBegin();
-		}
-		public void End(Status status = Status.Finished)
-		{
-			Status = status;
-			OnEnd();
+			//OnBegin();
 		}
 
-		public virtual void OnBegin() {}
+		public void DoUpdate( float dt )
+		{
+
+		}
+
+		public void End( Status status = Status.Finished )
+		{
+			Status = status;
+			//OnEnd();
+		}
+
+		/*public virtual void OnBegin() {}
 		public virtual void OnUpdate( float dt ) {}
-		public virtual void OnEnd() {}
+		public virtual void OnEnd() {}*/
 
 		public override string ToString()
 		{

@@ -2,7 +2,7 @@
 
 namespace FSM.States
 {
-	public class WorkState : State
+	/*public class WorkState : State
 	{
 		[Header( "Work State" )]
 		[SerializeField]
@@ -28,5 +28,5 @@ namespace FSM.States
 		{
 			print("end");
 		}
-	}
+	}*/
 }

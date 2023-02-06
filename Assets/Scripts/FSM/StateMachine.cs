@@ -51,7 +51,7 @@ namespace FSM
 
 			//  update current state
 			float dt = Time.deltaTime;
-			State.OnUpdate( dt );
+			State.DoUpdate( dt );
 		}
 	}
 }
