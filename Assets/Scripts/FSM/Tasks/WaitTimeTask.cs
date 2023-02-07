@@ -4,11 +4,12 @@ using UnityEngine.Events;
 
 namespace FSM.Tasks
 {
-    public class WaitTask : Task
+    public class WaitTimeTask : Task
     {
+		[Header( "Settings" )]
         public Vector2 TimeRange = new( 10.0f, 60.0f );
 
-        private float time = 0.0f;
+        protected float time = 0.0f;
 
         public override void OnBegin()
         {

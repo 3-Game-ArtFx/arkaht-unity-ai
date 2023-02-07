@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2c153a15d6529f64cb634fd22581dab5, type: 3}
-  m_Name: WakeUpTimeRangeCondition
+  m_Name: DayTimeRangeCondition
   m_EditorClassIdentifier: 
-  InSeconds: 35100
-  OutSeconds: 36000
+  InSeconds: 30600
+  OutSeconds: 61200

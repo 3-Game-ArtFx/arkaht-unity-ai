@@ -15,7 +15,7 @@ public class TimeManager : MonoBehaviour
     private const double MAX_SECONDS = 60.0d * 60.0d * 24.0d;
 
     [SerializeField]
-    private float speedMultiplier = 300.0f;
+    private float speedMultiplier = 300.0f, speedUpScale = 5.0f;
     [SerializeField]
     private float timeScale = 10.0f;
     [SerializeField]
@@ -32,7 +32,7 @@ public class TimeManager : MonoBehaviour
 
     void Update()
     {
-        Time.timeScale = ( !timeCondition.Evaluate( stateMachine ) ? 3.0f : 1.0f ) * timeScale;
+        Time.timeScale = ( !timeCondition.Evaluate( stateMachine ) ? speedUpScale : 1.0f ) * timeScale;
 
         //  update seconds
         Seconds = ( Seconds + Time.deltaTime * speedMultiplier ) % MAX_SECONDS;

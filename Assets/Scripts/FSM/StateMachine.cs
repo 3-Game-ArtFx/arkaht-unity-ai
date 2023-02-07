@@ -36,8 +36,6 @@ namespace FSM
 			State.StateMachine = this;
 			Status = Status.Running;
 			State.Begin();
-
-			print("starting " + state);
 		}
 
 		void Update()

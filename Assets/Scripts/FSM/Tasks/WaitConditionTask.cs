@@ -5,6 +5,7 @@ namespace FSM.Tasks
 {
     public class WaitConditionTask : Task
     {
+		[Header( "Settings" )]
         public Condition Condition;
         public bool ExpectedValue = true;
 

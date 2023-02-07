@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace FSM
@@ -11,22 +12,24 @@ namespace FSM
 		public Status Status { get; private set; } = Status.Stopped;
 		public Task Task { get; private set; }
 		public int TaskID { get; private set; } = -1;
+		public Task[] CurrentTasks { get; set; }
+		public State OverrideNextEndState { get; set; }
 
 		[Header( "State" )]
-		public string Name = "State";
-
 		public Transition[] Transitions;
-		public Task[] Tasks;
-		public UnityEvent OnBeginEvent = new(), OnEndEvent = new(), OnSwitchEvent = new();
+		public Task[] RunTasks, EndTasks;
 
-		private void Awake()
-		{
-			if ( Tasks.Length == 0 )
-				Tasks = GetComponents<Task>();
-		}
+		//public UnityEvent OnBeginEvent = new(), OnEndEvent = new(), OnSwitchEvent = new();
 
 		public State GetNextState()
 		{
+			if ( Status != Status.Running && OverrideNextEndState != null )
+			{
+			print( "override " + OverrideNextEndState );
+				return OverrideNextEndState;
+
+			}
+
 			foreach ( Transition transition in Transitions )
 			{
 				if ( Status == Status.Running && transition.OnlyEnded )
@@ -53,26 +56,45 @@ namespace FSM
 
 			//  begin task
 			task.StateMachine = StateMachine;
+			task.State = this;
 			Task = task;
 			Task.Begin();
 		}
 
 		public void NextTask()
 		{
-			if ( ++TaskID >= Tasks.Length )
+			if ( ++TaskID >= CurrentTasks.Length )
 			{
-				End();
+				if ( CurrentTasks == EndTasks )
+					End();
+				else
+					SetupEndTasks();
 				return;
 			}
 
-			SetTask( Tasks[TaskID] );
+			SetTask( CurrentTasks[TaskID] );
+			print( "task " + TaskID + " " + Task );
+		}
+
+		private void SetupEndTasks()
+		{
+			TaskID = -1;
+			CurrentTasks = EndTasks;
+			NextTask();
 		}
 
 		public void Begin()
 		{
-			Status = Status.Running;
+			OverrideNextEndState = null;
+
+			Task = null;
 			TaskID = -1;
-			OnBeginEvent.Invoke();
+
+			Status = Status.Running;
+			CurrentTasks = RunTasks;
+
+			//OnBeginEvent.Invoke();
+			print( "begin state " + this);
 		}
 
 		public void DoUpdate( float dt )
@@ -88,12 +110,13 @@ namespace FSM
 				NextTask();
 				return;
 			}
-			else if ( Task.Status == Status.Failed )
+			else if ( Task.Status != Status.Running )
 			{
-				End( Status.Failed );
+				SetupEndTasks();
+				return;
 			}
 
-			Task.OnUpdate( dt );
+			Task.DoUpdate( dt );
 		}
 
 		public void End( Status status = Status.Success )
@@ -104,17 +127,17 @@ namespace FSM
 			}
 
 			Status = status;
-			OnEndEvent.Invoke();
+			//OnEndEvent.Invoke();
         }
 
 		public void OnSwitch()
 		{
-			OnSwitchEvent.Invoke();
+			//OnSwitchEvent.Invoke();
 		}
 
         public override string ToString()
 		{
-			return GetType().FullName + ":" + Name;
+			return GetType().FullName + ":" + name;
 		}
 	}
 }
