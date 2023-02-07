@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Events;
 
 namespace FSM
 {
@@ -11,13 +8,22 @@ namespace FSM
 		public bool IsRunning => StateMachine != null && StateMachine.State == this;
 
 		public StateMachine StateMachine { get; set; }
-		public Status Status { get; private set; } = Status.Finished;
+		public Status Status { get; private set; } = Status.Stopped;
 		public Task Task { get; private set; }
+		public int TaskID { get; private set; } = -1;
 
 		[Header( "State" )]
 		public string Name = "State";
 
 		public Transition[] Transitions;
+		public Task[] Tasks;
+		public UnityEvent OnBeginEvent = new(), OnEndEvent = new(), OnSwitchEvent = new();
+
+		private void Awake()
+		{
+			if ( Tasks.Length == 0 )
+				Tasks = GetComponents<Task>();
+		}
 
 		public State GetNextState()
 		{
@@ -39,37 +45,74 @@ namespace FSM
 
 		public void SetTask( Task task )
 		{
+			//  ensure task is stopped
 			if ( Task != null && Task.Status == Status.Running )
 			{
 				Task.End( Status.Stopped );
 			}
 
+			//  begin task
 			task.StateMachine = StateMachine;
 			Task = task;
+			Task.Begin();
+		}
+
+		public void NextTask()
+		{
+			if ( ++TaskID >= Tasks.Length )
+			{
+				End();
+				return;
+			}
+
+			SetTask( Tasks[TaskID] );
 		}
 
 		public void Begin()
 		{
 			Status = Status.Running;
-			//OnBegin();
+			TaskID = -1;
+			OnBeginEvent.Invoke();
 		}
 
 		public void DoUpdate( float dt )
 		{
+			if ( Task == null )
+			{
+				NextTask();
+				return;
+			}
 
+			if ( Task.Status == Status.Success )
+			{
+				NextTask();
+				return;
+			}
+			else if ( Task.Status == Status.Failed )
+			{
+				End( Status.Failed );
+			}
+
+			Task.OnUpdate( dt );
 		}
 
-		public void End( Status status = Status.Finished )
+		public void End( Status status = Status.Success )
 		{
+			if ( Task != null && Task.Status == Status.Running )
+			{
+				Task.End( status );
+			}
+
 			Status = status;
-			//OnEnd();
+			OnEndEvent.Invoke();
+        }
+
+		public void OnSwitch()
+		{
+			OnSwitchEvent.Invoke();
 		}
 
-		/*public virtual void OnBegin() {}
-		public virtual void OnUpdate( float dt ) {}
-		public virtual void OnEnd() {}*/
-
-		public override string ToString()
+        public override string ToString()
 		{
 			return GetType().FullName + ":" + Name;
 		}

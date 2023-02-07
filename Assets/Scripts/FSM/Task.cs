@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FSM
 {
-	public abstract class Task
+	public abstract class Task : MonoBehaviour
 	{
 		public StateMachine StateMachine { get; set; }
 
@@ -15,7 +15,7 @@ namespace FSM
 			OnBegin();
 		}
 		
-		public void End( Status status = Status.Finished )
+		public void End( Status status = Status.Success )
 		{
 			Status = status;
 			OnEnd();
@@ -24,5 +24,12 @@ namespace FSM
 		public virtual void OnBegin() {}
 		public virtual void OnUpdate( float dt ) {}
 		public virtual void OnEnd() {}
+
+        public virtual void OnGizmos() {}
+		private void OnDrawGizmosSelected()
+		{
+			if ( Application.isPlaying ) return;
+			OnGizmos();
+		}
 	}
 }

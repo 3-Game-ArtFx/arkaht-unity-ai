@@ -1,3 +1,4 @@
+using FSM;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +17,13 @@ public class TimeManager : MonoBehaviour
     [SerializeField]
     private float speedMultiplier = 300.0f;
     [SerializeField]
+    private float timeScale = 10.0f;
+    [SerializeField]
     private TextMeshProUGUI hudTMP;
+    [SerializeField]
+    private StateMachine stateMachine;
+    [SerializeField]
+    private Condition timeCondition;
 
     void Awake()
     {
@@ -25,6 +32,8 @@ public class TimeManager : MonoBehaviour
 
     void Update()
     {
+        Time.timeScale = ( !timeCondition.Evaluate( stateMachine ) ? 3.0f : 1.0f ) * timeScale;
+
         //  update seconds
         Seconds = ( Seconds + Time.deltaTime * speedMultiplier ) % MAX_SECONDS;
 

@@ -6,7 +6,7 @@ namespace FSM
 {
 	public class StateMachine : MonoBehaviour
 	{
-		public Status Status { get; private set; } = Status.Finished;
+		public Status Status { get; private set; } = Status.Stopped;
 		public State State { get; private set; } = null;
 
 		public State StartState = null;
@@ -23,9 +23,12 @@ namespace FSM
 			if ( state == null ) return;
 
 			//  ensure previous state is ended
-			if ( State != null && State.Status == Status.Running )
+			if ( State != null )
 			{
-				State.End( Status.Stopped );
+				if ( State.Status == Status.Running )
+					State.End( Status.Stopped );
+
+				State.OnSwitch();
 			}
 
 			//  start next state
@@ -52,6 +55,13 @@ namespace FSM
 			//  update current state
 			float dt = Time.deltaTime;
 			State.DoUpdate( dt );
+		}
+
+		void OnDrawGizmosSelected()
+		{
+			if ( State == null || State.Task == null ) return;
+
+			State.Task.OnGizmos();
 		}
 	}
 }
