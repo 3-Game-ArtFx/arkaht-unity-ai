@@ -6,6 +6,7 @@ namespace FSM.Tasks
 {
 	public class MoveToTask : Task
 	{
+		[Header( "Settings" )]
 		public NavMeshAgent Agent;
 		public Vector3 Position;
 		public float UpdateDist = 1.0f, ReachDist = 1.0f;

@@ -5,7 +5,6 @@ namespace FSM.Tasks
 {
 	public class MoveToTransformTask : MoveToTask
 	{
-		[Header( "Settings" )]
 		public Transform Target;
 
 		public override void OnBegin()

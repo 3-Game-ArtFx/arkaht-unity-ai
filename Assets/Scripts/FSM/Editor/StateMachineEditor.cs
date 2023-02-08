@@ -35,7 +35,7 @@ namespace FSM.Tools
 
 						//  show every fields
 						EditorGUI.indentLevel++;
-						FieldInfo[] fields = type.GetFields( BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public );
+						FieldInfo[] fields = type.GetFields( BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.GetProperty );
 						foreach ( FieldInfo info in fields )
 						{
 							EditorGUILayout.TextField( info.Name, info.GetValue( task )?.ToString() );
